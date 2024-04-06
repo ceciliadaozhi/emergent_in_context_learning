@@ -720,6 +720,9 @@ def _save_state_from_in_memory_checkpointer(
 
 def main(argv, experiment_class):
 
+  save_interval_seconds = FLAGS.config.save_checkpoint_interval
+  last_save_time = time.time()
+  
   # Maybe restore a model.
   restore_path = FLAGS.config.restore_path
   if restore_path:
@@ -732,11 +735,11 @@ def main(argv, experiment_class):
   else:
     save_model_fn = functools.partial(
         _save_state_from_in_memory_checkpointer, save_dir, experiment_class)
-  current_time = time.time()
+    
   for step in range(FLAGS.config.training_steps):
-    if current_time - last_save_time >= save_interval_seconds:
+    if time.time() - last_save_time >= save_interval_seconds:
       save_model_fn
-      last_save_time = current_time 
+      last_save_time = time.time() 
   save_model_fn
  
   try:
