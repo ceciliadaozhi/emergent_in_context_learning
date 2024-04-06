@@ -37,6 +37,8 @@ import numpy as np
 import optax
 import tensorflow.compat.v2 as tf
 import tensorflow_datasets as tfds
+import time
+from datetime import datetime, timedelta
 
 from emergent_in_context_learning.datasets import data_generators
 from emergent_in_context_learning.datasets import utils as dataset_utils
@@ -730,8 +732,13 @@ def main(argv, experiment_class):
   else:
     save_model_fn = functools.partial(
         _save_state_from_in_memory_checkpointer, save_dir, experiment_class)
-  _setup_signals(save_model_fn)  # Save on Ctrl+C (continue) or Ctrl+\ (exit).
-
+  current_time = time.time()
+  for step in range(FLAGS.config.training_steps):
+    if current_time - last_save_time >= save_interval_seconds:
+      save_model_fn
+      last_save_time = current_time 
+  save_model_fn
+ 
   try:
     platform.main(experiment_class, argv)
   finally:
