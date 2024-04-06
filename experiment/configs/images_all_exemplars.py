@@ -115,7 +115,7 @@ def get_config(debug=False):
   config.log_tensors_interval = 60
   config.save_checkpoint_interval = 300
   config.train_checkpoint_all_hosts = False
-  config.checkpoint_dir = '/tmp/jaxline/transformer_omniglot/'
+  config.checkpoint_dir = '/kaggle/working'
   config.eval_specific_checkpoint_dir = ''
   config.restore_path = ''
 
