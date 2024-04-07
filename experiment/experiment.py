@@ -719,9 +719,6 @@ def _save_state_from_in_memory_checkpointer(
 
 
 def main(argv, experiment_class):
-
-  save_interval_seconds = FLAGS.config.save_checkpoint_interval
-  last_save_time = time.time()
   
   # Maybe restore a model.
   restore_path = FLAGS.config.restore_path
@@ -736,17 +733,28 @@ def main(argv, experiment_class):
     save_model_fn = functools.partial(
         _save_state_from_in_memory_checkpointer, save_dir, experiment_class)
     
-  for step in range(FLAGS.config.training_steps):
-    if time.time() - last_save_time >= save_interval_seconds:
-      save_model_fn
-      last_save_time = time.time() 
-  save_model_fn
+    experiment_instance = experiment_class()
+    best_performance = float('-inf')
+    saved_checkpoints = []
+    max_saved_checkpoints = 5  
+
+    for step in range(FLAGS.config.training_steps):          
+        current_performance = experiment_instance.evaluate(step, 0, 0)['accuracy_query']
+
+        if current_performance > best_performance:
+            best_performance = current_performance  
+            checkpoint_path = save_model_fn()
+            saved_checkpoints.append(checkpoint_path)
+          
+            if len(saved_checkpoints) > max_saved_checkpoints:
+                oldest_checkpoint = saved_checkpoints.pop(0)
+                os.remove(oldest_checkpoint)
+            logging.info(f"Saved better model with performance: {current_performance} at step: {step}")
  
   try:
     platform.main(experiment_class, argv)
   finally:
     save_model_fn()  # Save at the end of training or in case of exception.
-  platform.main(experiment_class, argv)
 
 
 if __name__ == '__main__':
